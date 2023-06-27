@@ -9,6 +9,7 @@
     xmlns:ios="http://uno.ui/ios"
     xmlns:utu="using:Uno.Toolkit.UI"
     xmlns:uen="using:Uno.Extensions.Navigation.UI"
+    NavigationCacheMode="Required"
     mc:Ignorable="d android ios"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 

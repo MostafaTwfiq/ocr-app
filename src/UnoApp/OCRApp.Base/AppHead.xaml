@@ -11,6 +11,7 @@
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="ms-appx:///OCRApp/AppResources.xaml" />
+        <ResourceDictionary Source="ms-appx:///OCRApp/Controls/Loading/Loading.xaml" />
       </ResourceDictionary.MergedDictionaries>
 
       <CornerRadius x:Key="MaterialFabTabBarItemCornerRadius">50</CornerRadius>

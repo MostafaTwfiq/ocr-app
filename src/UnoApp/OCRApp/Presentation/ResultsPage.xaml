@@ -24,15 +24,16 @@
                 </DataTemplate>
             </FlipView.ItemTemplate>
         </FlipView>
-        <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <Button x:Name="Previous" Click="Previous_Click" Content="&lt;" />
-                <TextBlock>
+                <TextBlock VerticalAlignment="Center">
                     <Run Text="{x:Bind PlusOne(flipView.SelectedIndex), Mode=OneWay}" /><Run Text="/" /><Run Text="{x:Bind flipView.Items.Count}" />
                 </TextBlock>
                 <Button x:Name="Next" Click="Next_Click" Content="&gt;" />
             </StackPanel>
-            <Button uen:Navigation.Request="-" Content="Go Back" />
+            <Button uen:Navigation.Request="-" Content="Go Back" HorizontalAlignment="Stretch" />
+            <Button Content="Save" HorizontalAlignment="Stretch" Click="SaveButton_Click" />
         </StackPanel>
         
     </Grid>
