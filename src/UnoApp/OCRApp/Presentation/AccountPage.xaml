@@ -5,6 +5,7 @@
     xmlns:local="using:OCRApp.Presentation"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:OCRApp.Controls"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -37,7 +38,7 @@
 
         <StackPanel x:Name="WelcomePanel" Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock>
-            <Run Text="Welcome, " /><Run Text="{x:Bind VM.LoggedInUsername, Mode=OneWay}" /><Run Text="!" />
+                <Run Text="Welcome, " /><Run Text="{x:Bind VM.LoggedInUsername, Mode=OneWay}" /><Run Text="!" />
             </TextBlock>
             <Button Content="Logout" HorizontalAlignment="Center" Click="LogoutButton_Click" />
         </StackPanel>
@@ -64,5 +65,12 @@
             <HyperlinkButton x:Name="LoginHyperLink" Content="Already have an account? Login!" Click="LoginHyperLink_Click" />
 
         </StackPanel>
+
+        <controls:Loading x:Name="LoadingControl">
+            <controls:Loading.Background>
+                <AcrylicBrush TintColor="Black" TintOpacity="0.4" />
+            </controls:Loading.Background>
+            <ProgressRing IsActive="True" />
+        </controls:Loading>
     </Grid>
 </Page>

@@ -10,14 +10,7 @@ import rpyc
 from io import BytesIO
 from .job_jwt_permission import JobJWTPermission
 import pickle
-
-from os import path
-import sys
-sys.path.append(path.join(path.dirname(__file__), '..'))
 from arabic_ocr_backend import settings
-import sys
-from os import path
-sys.path.append(path.join(path.join(path.dirname(__file__), '..'),'..'))
 
 secret_key = settings.SECRET_KEY
 hashing_alg = settings.HASHING_ALG
@@ -54,7 +47,6 @@ def arabic_ocr(req):
         images = serializer.validated_data['images']
         images_list = []
         for image in images:
-            #np_image = cv2.imdecode(np.frombuffer(image.read(), np.uint8), cv2.IMREAD_UNCHANGED)
             np_image = np.array(bytearray(image.read()), dtype=np.uint8)
             images_list.append(np_image)
 
@@ -76,5 +68,6 @@ def arabic_ocr(req):
 def check_for_job(req):
     # Access the 'uuid' element in the job jwt payload
     job_uuid = req.job.payload['uuid']
-    return Response({'results': jobs_dict[job_uuid] if job_uuid in jobs_dict else "Not Done"})
-    
+    if job_uuid in jobs_dict:
+        return Response({'results': jobs_dict[job_uuid]})
+    return Response({'results': "Not Done"}, status=status.HTTP_202_ACCEPTED)

@@ -1,19 +1,11 @@
-import os
 import re
-from pathlib import Path
 import string
-
-
 import cv2
 import numpy as np
 import torch
-from PIL import Image
 from more_itertools import split_when
 from ultralytics import YOLO
 from ultralytics.yolo.utils.plotting import Annotator
-from datasets import load_metric
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
 
 name_to_unicode = {
     'baa': 1576,
@@ -61,22 +53,6 @@ name_to_unicode = {
     'space': ord(" "),
 }
 
-arabic_punctuations = '''`÷×؛<>_()*&^%][ـ،/:"؟.,'{}~¦+|!”…“–ـ'''
-english_punctuations = string.punctuation
-punctuations_list = arabic_punctuations + english_punctuations
-arabic_diacritics = re.compile("""
-                                 ّ    | # Tashdid
-                                 َ    | # Fatha
-                                 ً    | # Tanwin Fath
-                                 ُ    | # Damma
-                                 ٌ    | # Tanwin Damm
-                                 ِ    | # Kasra
-                                 ٍ    | # Tanwin Kasr
-                                 ْ    | # Sukun
-                                 ـ     # Tatwil/Kashida
-                             """, re.VERBOSE)
-
-
 def normalize_arabic(text):
     text = re.sub("[إأآا]", "ا", text)
     text = re.sub("ى", "ي", text)
@@ -88,16 +64,6 @@ def normalize_arabic(text):
     return text
 
 
-def remove_diacritics(text):
-    text = re.sub(arabic_diacritics, '', text)
-    return text
-
-
-def remove_punctuations(text):
-    translator = str.maketrans('', '', punctuations_list)
-    return text.translate(translator)
-
-
 def load_image(img_path: str):
     frame = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
     return frame
@@ -107,35 +73,7 @@ def get_device():
     return 0 if torch.cuda.is_available() else "cpu"
 
 
-def infer_words(img: np.ndarray):
-    global word_model
-    # returns List[(word_image, bb, class)]
-    results = word_model.predict(img, device=get_device(), verbose=False)
-    returnable = []
-    while len(results[0]) != 0:
-        for r in results:
-            boxes = r.boxes
-            for box in boxes:
-                x1, y1, x2, y2 = box.xyxy[0].cpu(
-                ).data.numpy().astype(int).tolist()
-                returnable.append(
-                    (img[y1:y2, x1:x2].copy(), box, word_model.names[int(box.cls)]))
-                img = cv2.rectangle(img, (x1, y1), (x2, y2),
-                                    (255, 255, 255), -1)
-        results = word_model.predict(img)
-    return returnable
-
-
-def preprocess_box(img):
-    img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-    img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-    img = np.pad(img, ((10, 10), (10, 10), (0, 0)), constant_values=255)
-    return img
-
-
-def infer_words(img: np.ndarray):
-    word_model = YOLO(f'{current_dir}/word_model.pt')
+def infer_words(word_model: YOLO, img: np.ndarray):
     # returns List[(word_image, bb, class)]
     results = word_model.predict(img, verbose=False)
     returnable = []
@@ -143,24 +81,21 @@ def infer_words(img: np.ndarray):
         boxes = r.boxes
         for box in boxes:
             x1, y1, x2, y2 = box.xyxy[0].cpu(
-            ).data.numpy().astype(int).tolist()
-            returnable.append(
-                (img[y1:y2, x1:x2].copy(), box, word_model.names[int(box.cls)]))
+                ).data.numpy().astype(int).tolist()
+            returnable.append(box.xyxy[0].tolist())
             img = cv2.rectangle(img, (x1, y1), (x2, y2),
                                 (255, 255, 255), -1)
     return returnable
 
 
-def infer_letters(img: np.ndarray, out_full_path=None, debug=False, convert_names=False, **kwargs):
-    model = YOLO(f'{current_dir}/letter_model.pt')
+def infer_letters(model: YOLO, img: np.ndarray, out_full_path=None, debug=False, convert_names=False, **kwargs):
     results = model.predict(img, verbose=False, **kwargs)[0]
     # x1, y1, x2, y2, x3, y3, etc
     boxes = [box.tolist() for box in results.boxes.data]
     xs = [np.max(box[::2]) for box in boxes]
     sorted_indices = np.argsort(xs)[::-1]  # sort by max x in each box
 
-    letters = [int(results.boxes.cls[i]) for i in sorted_indices]
-    letters = [model.names[class_no] for class_no in letters]
+    letters = [model.names[int(results.boxes.cls[i])] for i in sorted_indices]
 
     if convert_names:
         letters = [name_to_unicode[name] for name in letters]
@@ -177,11 +112,7 @@ def infer_letters(img: np.ndarray, out_full_path=None, debug=False, convert_name
             cv2.imwrite(out_full_path, img)
         # cv2_imshow(img)
 
-    return normalize_arabic(remove_diacritics(remove_punctuations(word)))
-
-
-def save_to_file():
-    pass
+    return normalize_arabic(word)
 
 
 def get_y_center(b):
@@ -252,25 +183,3 @@ def merge_boxes(boxes, iou_thresh=0.3):
 
 def map2d(func, grid):
     return [[func(value) for value in row] for row in grid]
-
-
-def evaluate_yolo_model(test_dir, model):
-    test_dir = Path(test_dir)
-    assert test_dir.exists()
-    assert "images" in os.listdir(test_dir)
-    assert "labels" in os.listdir(test_dir)
-
-    predicted_texts = []
-    ground_truths = []
-    for filename in os.listdir(Path(test_dir) / "images"):
-        match = re.search("(.+)-\d+.png", filename)
-        if not match:
-            continue
-        else:
-            ground_truths.append(match.group(1))
-            img = cv2.cvtColor(cv2.imread(
-                str(Path(test_dir) / "images/" / filename)), cv2.COLOR_BGR2RGB)
-            predicted_texts.append(infer_letters(img))
-
-    cer_metric = load_metric("cer")
-    return cer_metric.compute(predictions=predicted_texts, references=ground_truths)
