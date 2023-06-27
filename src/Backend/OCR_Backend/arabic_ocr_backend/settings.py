@@ -76,7 +76,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "ocr_api",
     "corsheaders",
-    "users", 
+    "users",
     "users.validators"
 ]
 
@@ -148,18 +148,6 @@ AUTH_PASSWORD_VALIDATORS = [
         }
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-        'OPTIONS': {
-            'user_attributes': ('username'), #Checks whether the password is too similar to the user\'s attributes, such as their username or email
-        }
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-    {
         'NAME': 'users.validators.pass_validators.UppercaseValidator',
         'OPTIONS': {
             'min_upper': 1,
@@ -182,6 +170,15 @@ AUTH_PASSWORD_VALIDATORS = [
         'OPTIONS': {
             'min_special': 1,
         }
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'OPTIONS': {
+            'user_attributes': ('username'), #Checks whether the password is too similar to the user\'s attributes, such as their username or email
+        }
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
 ]
 

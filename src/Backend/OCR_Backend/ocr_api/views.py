@@ -106,4 +106,3 @@ def check_for_job(req):
         return Response({'results': url})
     except Exception as e:
         return Response({'results': "Not Done"})
-    

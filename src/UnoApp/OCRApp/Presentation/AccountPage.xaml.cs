@@ -82,6 +82,7 @@ public sealed partial class AccountPage : Page
     {
         try
         {
+            LoadingControl.IsLoading = true;
             if (await VM!.LoginAsync(UsernameLoginTextBox.Text, PasswordLoginTextBox.Password))
             {
                 VM.LoggedInUsername = UsernameLoginTextBox.Text;
@@ -109,6 +110,10 @@ public sealed partial class AccountPage : Page
                 PrimaryButtonText = "Ok",
             };
             await dialog.ShowAsync();
+        }
+        finally
+        {
+            LoadingControl.IsLoading = false;
         }
     }
 
